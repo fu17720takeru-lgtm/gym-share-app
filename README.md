@@ -17,6 +17,7 @@ POST /api/register
 送信:
 
 {
+
     "username": "takuya",
 
     "password": "password"
@@ -26,6 +27,7 @@ POST /api/register
 返信:
 
 {
+
     "result": "success",
 
     "message": "account is made"
@@ -33,6 +35,7 @@ POST /api/register
 }
 
 {
+
     "result": "error",
 
     "message": "username already exists"
@@ -46,6 +49,7 @@ POST /api/login
 送信:
 
 {
+
     "username": "takuya",
 
     "password": "password"
