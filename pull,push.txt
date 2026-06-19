@@ -1,0 +1,7 @@
+プル
+git pull origin main
+
+プッシュ
+git add.
+git commit -m "テキスト"
+git push
