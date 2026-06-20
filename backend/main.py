@@ -1,4 +1,5 @@
 #venvを起動するには Mac:　source venv/bin/activate  Win: venv/Scripts/activate
+#実行するには　uvicorn mina:app --reloadでブラウザでhttp://localhost:8000
 from argon2 import PasswordHasher
 from fastapi import FastAPI
 
@@ -18,6 +19,22 @@ print(f"ハッシュ化されたパスワード: {hashed_password}")
 
 app = FastAPI()
 
-@app.get("/")
+@app.get("/") #最初の画面
 def read_root():
     return {"messsage": "Hello World"}
+
+@app.post("/api/register") #アカウント登録
+def regist():
+    return 0
+
+@app.post("/api/login") #ログイン
+def login():
+    return 0
+
+@app.post("/api/workouts") #運動記録
+def workout():
+    return 0
+
+@app.get("/api/workouts") #運動記録を閲覧
+def workout():
+    return 0
