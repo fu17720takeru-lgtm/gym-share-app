@@ -2,7 +2,7 @@
 #実行するには　uvicorn mina:app --reloadでブラウザでhttp://localhost:8000
 from argon2 import PasswordHasher
 from fastapi import FastAPI
-
+import models
 '''
 # PasswordHasherのインスタンスを作成（デフォルト設定を使用）
 ph = PasswordHasher()
@@ -24,15 +24,15 @@ def read_root():
     return {"messsage": "Hello World"}
 
 @app.post("/api/register") #アカウント登録
-def regist():
+def regist(data: models.Regist):
     return 0
 
 @app.post("/api/login") #ログイン
-def login():
+def login(data: models.Login):
     return 0
 
 @app.post("/api/workouts") #運動記録
-def workout():
+def workout(data: models.Workouts):
     return 0
 
 @app.get("/api/workouts") #運動記録を閲覧
