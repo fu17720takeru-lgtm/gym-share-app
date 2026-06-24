@@ -3,6 +3,7 @@
 from fastapi import FastAPI
 import models
 import hash
+import json
 
 app = FastAPI()
 
@@ -12,6 +13,12 @@ def read_root():
 
 @app.post("/api/register") #アカウント登録
 def regist(data: models.Regist):
+    hashed_pass = hash.hash(data.password)
+    data = {
+        "username": data.username,
+        "password": hashed_pass
+    }
+    
     return 0
 
 @app.post("/api/login") #ログイン
@@ -25,6 +32,3 @@ def workout(data: models.Workouts):
 @app.get("/api/workouts") #運動記録を閲覧
 def workout():
     return 0
-
-if __name__ == '__main__':
-    print(hash.hash('abcdef'))
