@@ -29,9 +29,7 @@ POST /api/register
 {
 
     "result": "success",
-
-    "message": "account is made"
-
+    
 }
 
 {
