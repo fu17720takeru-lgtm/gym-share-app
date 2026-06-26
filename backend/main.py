@@ -23,6 +23,11 @@ def regist(data: models.Regist):
 
 @app.post("/api/login") #ログイン
 def login(data: models.Login):
+    hashed_pass = hash.hash(data.password)
+    data = {
+        "username": data.username,
+        "password": hashed_pass
+    }
     return 0
 
 @app.post("/api/workouts") #運動記録
