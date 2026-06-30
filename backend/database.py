@@ -1,6 +1,7 @@
 import os
 import psycopg2
 import psycopg2.extras
+from urllib.parse import urlparse
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
@@ -26,7 +27,16 @@ class DBConn:
 def get_db() -> DBConn:
     if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL 環境変数が設定されていません")
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+    # URLをパースして個別に渡す（ユーザー名にドットが含まれる場合の誤解析を防ぐ）
+    u = urlparse(DATABASE_URL)
+    conn = psycopg2.connect(
+        host=u.hostname,
+        port=u.port,
+        user=u.username,
+        password=u.password,
+        dbname=u.path.lstrip("/"),
+        cursor_factory=psycopg2.extras.RealDictCursor,
+    )
     return DBConn(conn)
 
 
