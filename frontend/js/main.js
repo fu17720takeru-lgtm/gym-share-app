@@ -478,7 +478,7 @@ function createExerciseCard(name, part) {
     </div>
     <div class="last-record" style="display:none"></div>
     <div class="set-col-header">
-      <span>セット</span><span>重さ</span><span>回数</span><span>RM</span><span>補助</span>
+      <span>SET</span><span></span><span>重さ</span><span></span><span></span><span>回数</span><span></span><span>RM</span><span>補助</span>
     </div>
     <div class="set-rows"></div>
     <button type="button" class="add-set-btn" onclick="addSetRowBtn(this)">＋ セットを追加</button>
@@ -519,18 +519,14 @@ function addSetRow(card, prev, num) {
   block.innerHTML = `
     <div class="set-main-row">
       <span class="set-num">${num}</span>
-      <div class="set-input-wrap">
-        <button type="button" class="carry-btn" onclick="carryValue(this,'weight')">↩</button>
-        <input class="set-text-input" type="number" placeholder="重さ" min="0" step="0.5"
-               oninput="updateRMDisplay(this)" />
-        <span class="set-unit-label">kg</span>
-      </div>
-      <div class="set-input-wrap">
-        <button type="button" class="carry-btn" onclick="carryValue(this,'reps')">↩</button>
-        <input class="set-text-input" type="number" placeholder="回数" min="1"
-               oninput="updateRMDisplay(this)" />
-        <span class="set-unit-label">回</span>
-      </div>
+      <button type="button" class="carry-btn" onclick="carryValue(this,'weight')">↩</button>
+      <input class="set-text-input set-weight-input" type="number" placeholder="重さ" min="0" step="0.5"
+             inputmode="decimal" oninput="updateRMDisplay(this)" />
+      <span class="set-unit-label">kg</span>
+      <button type="button" class="carry-btn" onclick="carryValue(this,'reps')">↩</button>
+      <input class="set-text-input set-reps-input" type="number" placeholder="回数" min="1"
+             inputmode="numeric" oninput="updateRMDisplay(this)" />
+      <span class="set-unit-label">回</span>
       <span class="set-rm-val">-</span>
       <button type="button" class="set-check" onclick="toggleSetDone(this)">✓</button>
     </div>
@@ -547,12 +543,12 @@ function carryValue(btn, type) {
   if (type === "weight") {
     const v = block.dataset.prevWeight;
     if (!v) return;
-    const input = block.querySelectorAll(".set-main-row .set-text-input")[0];
+    const input = block.querySelector(".set-weight-input");
     input.value = v; updateRMDisplay(input);
   } else if (type === "reps") {
     const v = block.dataset.prevReps;
     if (!v) return;
-    const input = block.querySelectorAll(".set-main-row .set-text-input")[1];
+    const input = block.querySelector(".set-reps-input");
     input.value = v; updateRMDisplay(input);
   }
 }
@@ -566,18 +562,18 @@ function copyLastRecord(btn) {
     let block = blocks[i];
     if (!block) { addSetRow(card, s, i + 1); block = card.querySelectorAll(".set-block")[i]; }
     if (!block) return;
-    const inputs = block.querySelectorAll(".set-main-row .set-text-input");
-    if (inputs[0]) { inputs[0].value = s.weight ?? ""; updateRMDisplay(inputs[0]); }
-    if (inputs[1]) { inputs[1].value = s.reps ?? ""; }
+    const wInput = block.querySelector(".set-weight-input");
+    const rInput = block.querySelector(".set-reps-input");
+    if (wInput) { wInput.value = s.weight ?? ""; updateRMDisplay(wInput); }
+    if (rInput) { rInput.value = s.reps ?? ""; }
   });
 }
 
 function updateRMDisplay(input) {
   const block = input.closest(".set-block");
   if (!block) return;
-  const inputs = block.querySelectorAll(".set-main-row .set-text-input");
-  const w = parseFloat(inputs[0]?.value);
-  const r = parseInt(inputs[1]?.value);
+  const w = parseFloat(block.querySelector(".set-weight-input")?.value);
+  const r = parseInt(block.querySelector(".set-reps-input")?.value);
   const rmEl = block.querySelector(".set-rm-val");
   if (rmEl) rmEl.textContent = (w && r) ? `${calc1RM(w, r)}kg` : "-";
 }
@@ -596,9 +592,8 @@ async function submitWorkout(e) {
   document.querySelectorAll(".exercise-card").forEach(card => {
     const name = card.dataset.exercise;
     card.querySelectorAll(".set-block").forEach(block => {
-      const inputs = block.querySelectorAll(".set-main-row .set-text-input");
-      const weight = inputs[0]?.value;
-      const reps = inputs[1]?.value;
+      const weight = block.querySelector(".set-weight-input")?.value;
+      const reps = block.querySelector(".set-reps-input")?.value;
       if (weight || reps) {
         exercises.push({
           exercise: name,
