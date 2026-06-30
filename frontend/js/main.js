@@ -1,6 +1,4 @@
-// ローカル開発: "http://localhost:8000"
-// 本番（Railway URL に変更）: "https://your-app.up.railway.app"
-const API = "http://localhost:8000";
+const API = "https://gym-share-app.onrender.com";
 
 // ─── ストレージ ───────────────────────────────────────────
 
