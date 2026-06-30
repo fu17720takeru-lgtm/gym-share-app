@@ -271,16 +271,19 @@ let calYear = new Date().getFullYear();
 let calMonth = new Date().getMonth();
 let calWorkoutDates = new Set();
 let calEventDates = {};
+let calWorkouts = [];
 
 async function loadCalendar() {
   const groupId = document.getElementById("group-select-calendar").value;
   calWorkoutDates = new Set();
   calEventDates = {};
+  calWorkouts = [];
 
   try {
     const workouts = groupId
       ? await api("GET", `/api/groups/${groupId}/workouts`)
       : await api("GET", "/api/workouts/me");
+    calWorkouts = workouts;
     workouts.forEach(w => calWorkoutDates.add(w.date));
   } catch (_) {}
 
@@ -347,12 +350,35 @@ function renderEventList() {
 
 function showDayDetail(dateStr) {
   const events = calEventDates[dateStr] || [];
+  const dayWorkouts = calWorkouts.filter(w => w.date === dateStr);
   const container = document.getElementById("calendar-events");
-  if (events.length > 0) {
-    container.innerHTML = `<h4 style='margin-bottom:8px'>${dateStr} のイベント</h4>` +
-      events.map(ev => renderEventCard(ev)).join("");
-    container.scrollIntoView({ behavior: "smooth" });
+
+  if (events.length === 0 && dayWorkouts.length === 0) return;
+
+  const [y, m, d] = dateStr.split("-");
+  let html = `<div class="day-detail-header">${y}年${parseInt(m)}月${parseInt(d)}日</div>`;
+
+  if (dayWorkouts.length > 0) {
+    html += dayWorkouts.map(w => `
+      <div class="day-workout-card">
+        <div class="day-workout-user">💪 ${w.username}</div>
+        ${w.exercises.map(ex => `
+          <div class="day-workout-ex">
+            <span class="day-workout-name">${ex.exercise}</span>
+            <span class="day-workout-detail">${ex.weight ?? "-"}kg × ${ex.reps ?? "-"}回 × ${ex.sets ?? "-"}セット</span>
+          </div>
+        `).join("")}
+      </div>
+    `).join("");
   }
+
+  if (events.length > 0) {
+    html += `<div class="day-section-label">合トレイベント</div>` +
+      events.map(ev => renderEventCard(ev)).join("");
+  }
+
+  container.innerHTML = html;
+  container.scrollIntoView({ behavior: "smooth" });
 }
 
 function renderEventCard(ev) {
