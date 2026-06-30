@@ -369,6 +369,11 @@ body {
   background: transparent; border: none; color: var(--primary);
   font-size: 14px; font-weight: 700; cursor: pointer; padding: 0 0 12px; display: block;
 }
+.copy-code-btn {
+  margin-left: 8px; padding: 3px 10px; border-radius: 12px;
+  border: 1.5px solid var(--border); background: transparent;
+  font-size: 12px; cursor: pointer; color: var(--text-light);
+}
 
 .member-row {
   display: flex; align-items: center; justify-content: space-between;

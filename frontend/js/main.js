@@ -748,6 +748,11 @@ function closeGroupDetail() {
   document.getElementById("group-list").style.display = "";
 }
 
+function copyInviteCode() {
+  const code = document.getElementById("group-invite-code").textContent;
+  navigator.clipboard.writeText(code).then(() => alert("招待コードをコピーしました: " + code));
+}
+
 async function createGroup(e) {
   e.preventDefault();
   const name = document.getElementById("new-group-name").value.trim();
@@ -771,8 +776,12 @@ async function joinGroup(e) {
     const res = await api("POST", "/api/groups/join", { invite_code });
     closeAllModals();
     document.getElementById("join-invite-code").value = "";
-    await loadGroupList();
-    alert(res.message);
+    await loadGroups();
+    // 参加したグループをホームセレクタで選択
+    const sel = document.getElementById("group-select-home");
+    if (res.group_id) sel.value = res.group_id;
+    showPage("home");
+    await loadTimeline();
   } catch (err) {
     alert(err.message);
   }
