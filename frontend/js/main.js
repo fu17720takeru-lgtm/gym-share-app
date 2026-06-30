@@ -572,6 +572,12 @@ function openModal(id) {
   document.getElementById(id).style.display = "";
 }
 
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  input.type = input.type === "password" ? "text" : "password";
+  btn.style.opacity = input.type === "text" ? "1" : "0.5";
+}
+
 function closeAllModals() {
   document.getElementById("modal-backdrop").style.display = "none";
   document.querySelectorAll(".modal").forEach(m => (m.style.display = "none"));

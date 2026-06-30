@@ -272,3 +272,13 @@ body {
 .comment-text { font-size: 14px; margin-top: 2px; }
 
 .empty-msg { text-align: center; color: var(--text-light); padding: 32px 0; font-size: 14px; }
+
+/* ── パスワード表示切り替え ── */
+.pw-wrap { position: relative; margin-bottom: 12px; }
+.pw-wrap .input { margin-bottom: 0; padding-right: 44px; }
+.pw-toggle {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; font-size: 18px; opacity: 0.5;
+  transition: opacity .15s;
+}
+.pw-toggle:hover { opacity: 1; }

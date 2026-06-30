@@ -21,13 +21,19 @@
 
     <form id="login-form" onsubmit="doLogin(event)">
       <input class="input" type="text" id="login-username" placeholder="ユーザー名" required />
-      <input class="input" type="password" id="login-password" placeholder="パスワード" required />
+      <div class="pw-wrap">
+        <input class="input" type="password" id="login-password" placeholder="パスワード" required />
+        <button type="button" class="pw-toggle" onclick="togglePw('login-password', this)">👁</button>
+      </div>
       <button class="btn-primary" type="submit">ログイン</button>
     </form>
 
     <form id="register-form" style="display:none" onsubmit="doRegister(event)">
       <input class="input" type="text" id="reg-username" placeholder="ユーザー名" required />
-      <input class="input" type="password" id="reg-password" placeholder="パスワード" required />
+      <div class="pw-wrap">
+        <input class="input" type="password" id="reg-password" placeholder="パスワード" required />
+        <button type="button" class="pw-toggle" onclick="togglePw('reg-password', this)">👁</button>
+      </div>
       <button class="btn-primary" type="submit">登録する</button>
     </form>
 
