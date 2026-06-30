@@ -540,13 +540,15 @@ function addSetRow(card, prev, num) {
 
 function carryValue(btn, type) {
   const block = btn.closest(".set-block");
+  const prev = block.previousElementSibling;
+  if (!prev || !prev.classList.contains("set-block")) return;
   if (type === "weight") {
-    const v = block.dataset.prevWeight;
+    const v = prev.querySelector(".set-weight-input")?.value;
     if (!v) return;
     const input = block.querySelector(".set-weight-input");
     input.value = v; updateRMDisplay(input);
   } else if (type === "reps") {
-    const v = block.dataset.prevReps;
+    const v = prev.querySelector(".set-reps-input")?.value;
     if (!v) return;
     const input = block.querySelector(".set-reps-input");
     input.value = v; updateRMDisplay(input);
