@@ -283,10 +283,10 @@ body {
 .set-check {
   width: 30px; height: 30px; border-radius: 6px;
   border: 2px solid #ddd; background: transparent;
-  cursor: pointer; font-size: 15px; color: #ccc;
+  cursor: pointer; font-size: 14px; color: #ccc; font-weight: 700;
   display: flex; align-items: center; justify-content: center; transition: .15s;
 }
-.set-check.done { background: #2ecc71; border-color: #2ecc71; color: #fff; }
+.set-check.done { background: #2ecc71; border-color: #2ecc71; color: #fff; font-size: 15px; }
 
 .set-memo-row { padding: 4px 10px 10px; display: flex; align-items: center; gap: 6px; }
 .set-memo-input {

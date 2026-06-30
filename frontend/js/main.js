@@ -519,19 +519,19 @@ function addSetRow(card, prev, num) {
   block.innerHTML = `
     <div class="set-main-row">
       <span class="set-num">${num}</span>
-      <button type="button" class="carry-btn" onclick="carryValue(this,'weight')">↩</button>
+      <button type="button" class="carry-btn" onclick="carryValue(this,'weight')">↺</button>
       <input class="set-text-input set-weight-input" type="number" placeholder="重さ" min="0" step="0.5"
              inputmode="decimal" oninput="updateRMDisplay(this)" />
       <span class="set-unit-label">kg</span>
-      <button type="button" class="carry-btn" onclick="carryValue(this,'reps')">↩</button>
+      <button type="button" class="carry-btn" onclick="carryValue(this,'reps')">↺</button>
       <input class="set-text-input set-reps-input" type="number" placeholder="回数" min="1"
              inputmode="numeric" oninput="updateRMDisplay(this)" />
       <span class="set-unit-label">回</span>
       <span class="set-rm-val">-</span>
-      <button type="button" class="set-check" onclick="toggleSetDone(this)">✓</button>
+      <button type="button" class="set-check" onclick="toggleSetDone(this)">❯</button>
     </div>
     <div class="set-memo-row">
-      <button type="button" class="carry-btn" style="width:22px;height:22px;font-size:10px" onclick="carryValue(this,'memo')">↩</button>
+      <button type="button" class="carry-btn" style="width:22px;height:22px;font-size:10px" onclick="carryValue(this,'memo')">↺</button>
       <input class="set-memo-input" type="text" placeholder="メモ" />
     </div>
   `;
@@ -582,7 +582,13 @@ function updateRMDisplay(input) {
 
 function toggleSetDone(btn) {
   btn.classList.toggle("done");
-  btn.closest(".set-block").style.background = btn.classList.contains("done") ? "#f0fff4" : "";
+  if (btn.classList.contains("done")) {
+    btn.textContent = "✓";
+    btn.closest(".set-block").style.background = "#f0fff4";
+  } else {
+    btn.textContent = "❯";
+    btn.closest(".set-block").style.background = "";
+  }
 }
 
 async function submitWorkout(e) {
