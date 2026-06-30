@@ -522,13 +522,40 @@ async function submitWorkout(e) {
 
   if (exercises.length === 0) { alert("種目を追加してください"); return; }
 
+  // PR チェック用に各種目の現在PRを取得
+  const exerciseNames = [...new Set(exercises.map(e => e.exercise))];
+  const prMap = {};
+  await Promise.all(exerciseNames.map(async name => {
+    try {
+      const res = await api("GET", `/api/exercises/${encodeURIComponent(name)}/pr`);
+      prMap[name] = res?.pr ?? null;
+    } catch (_) {}
+  }));
+
   try {
     await api("POST", "/api/workouts", { date, memo, exercises });
-    alert("記録しました！");
+
+    // 新PR検出
+    const newPRs = [];
+    for (const ex of exercises) {
+      const w = ex.weight;
+      if (w && (prMap[ex.exercise] === null || w > prMap[ex.exercise])) {
+        if (!newPRs.find(p => p.exercise === ex.exercise && p.weight === w)) {
+          newPRs.push({ exercise: ex.exercise, weight: w });
+        }
+        prMap[ex.exercise] = w;
+      }
+    }
+
     document.getElementById("workout-memo").value = "";
     document.getElementById("exercise-cards").innerHTML = "";
     await loadStreak();
-    showPage("home");
+
+    if (newPRs.length > 0) {
+      showPR(newPRs[0].exercise, newPRs[0].weight);
+    } else {
+      showPage("home");
+    }
   } catch (err) {
     alert(err.message);
   }
@@ -682,6 +709,18 @@ async function loadRanking() {
 function openModal(id) {
   document.getElementById("modal-backdrop").style.display = "";
   document.getElementById(id).style.display = "";
+}
+
+function showPR(exercise, weight) {
+  document.getElementById("pr-exercise").textContent = exercise;
+  document.getElementById("pr-weight").textContent = `${weight} kg`;
+  const overlay = document.getElementById("pr-overlay");
+  overlay.style.display = "flex";
+  // 3秒後に自動で閉じてホームへ
+  setTimeout(() => {
+    overlay.style.display = "none";
+    showPage("home");
+  }, 3000);
 }
 
 function togglePw(inputId, btn) {

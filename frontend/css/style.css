@@ -341,6 +341,42 @@ body {
 
 .empty-msg { text-align: center; color: var(--text-light); padding: 32px 0; font-size: 14px; }
 
+/* ── PR アニメーション ── */
+#pr-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,.65);
+  display: flex; align-items: center; justify-content: center;
+  animation: prFadeIn .3s ease;
+  cursor: pointer;
+}
+@keyframes prFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.pr-card {
+  background: #fff; border-radius: 24px;
+  padding: 40px 32px; text-align: center; width: min(320px, 88%);
+  animation: prPop .5s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+@keyframes prPop { from { transform: scale(.5); opacity:0; } to { transform: scale(1); opacity:1; } }
+
+.pr-trophy {
+  font-size: 72px; display: block; margin-bottom: 12px;
+  animation: prBounce 1s ease infinite;
+}
+@keyframes prBounce {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.pr-label {
+  font-size: 22px; font-weight: 900; color: var(--primary);
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #e74c3c, #ff6b35);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.pr-exercise { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.pr-weight { font-size: 36px; font-weight: 900; color: var(--primary); margin-bottom: 16px; }
+.pr-hint { font-size: 12px; color: var(--text-light); }
+
 /* ── パスワード表示切り替え ── */
 .pw-wrap { position: relative; margin-bottom: 12px; }
 .pw-wrap .input { margin-bottom: 0; padding-right: 44px; }

@@ -164,6 +164,21 @@ def add_workout(data: models.WorkoutIn, current_user=Depends(auth.get_current_us
         db.close()
 
 
+@app.get("/api/exercises/{exercise_name}/pr")
+def get_pr(exercise_name: str, current_user=Depends(auth.get_current_user)):
+    db = database.get_db()
+    try:
+        row = db.execute(
+            """SELECT MAX(weight) as max_weight FROM workout_exercises we
+               JOIN workouts w ON we.workout_id = w.id
+               WHERE w.user_id = %s AND we.exercise = %s""",
+            (current_user["id"], exercise_name),
+        ).fetchone()
+        return {"pr": row["max_weight"] if row else None}
+    finally:
+        db.close()
+
+
 @app.get("/api/exercises/{exercise_name}/last")
 def last_exercise_record(exercise_name: str, current_user=Depends(auth.get_current_user)):
     db = database.get_db()
