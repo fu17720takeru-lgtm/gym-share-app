@@ -103,17 +103,13 @@
     <div id="page-add-workout" class="page">
       <header class="page-header"><h2>筋トレ記録</h2></header>
       <form id="workout-form" onsubmit="submitWorkout(event)">
-        <label class="label">日付</label>
-        <input class="input" type="date" id="workout-date" required />
+        <input class="input" type="date" id="workout-date" required style="margin-bottom:8px" />
+        <input class="input" type="text" id="workout-memo" placeholder="📝 メモ（任意）" />
 
-        <label class="label">メモ（任意）</label>
-        <input class="input" type="text" id="workout-memo" placeholder="今日のひとこと" />
+        <div id="exercise-cards"></div>
 
-        <label class="label">種目</label>
-        <div id="exercises-container"></div>
-        <button type="button" class="btn-secondary" onclick="addExerciseRow()">＋ 種目を追加</button>
-
-        <button class="btn-primary" type="submit" style="margin-top:16px">記録する</button>
+        <button type="button" class="add-exercise-btn" onclick="openExerciseSelector()">＋ 種目を追加</button>
+        <button class="btn-primary" type="submit" style="margin-top:12px">💾 記録する</button>
       </form>
     </div>
 
@@ -182,6 +178,20 @@
     <input class="input" type="text" id="event-desc" placeholder="説明（任意）" />
     <button class="btn-primary" type="submit">作成</button>
   </form>
+</div>
+
+<div id="exercise-selector-modal" class="modal exercise-selector-modal" style="display:none">
+  <h3>種目を選択</h3>
+  <input class="input" type="text" id="exercise-search" placeholder="種目名を検索..." oninput="filterExercises()" />
+  <div class="part-tabs" id="part-tabs"></div>
+  <div id="exercise-list" class="exercise-list"></div>
+  <div style="margin-top:12px">
+    <p style="font-size:12px;color:#999;margin-bottom:6px">カスタム種目</p>
+    <div style="display:flex;gap:8px">
+      <input class="input" type="text" id="custom-exercise" placeholder="種目名を入力" style="margin-bottom:0;flex:1" />
+      <button type="button" class="btn-secondary" style="width:auto;padding:0 14px" onclick="addCustomExercise()">追加</button>
+    </div>
+  </div>
 </div>
 
 <div id="comment-modal" class="modal" style="display:none">

@@ -113,7 +113,7 @@ function showPage(name) {
 
   if (name === "home") loadTimeline();
   if (name === "calendar") { calYear = new Date().getFullYear(); calMonth = new Date().getMonth(); renderCalendar(); }
-  if (name === "add-workout") { document.getElementById("exercises-container").innerHTML = ""; addExerciseRow(); }
+  if (name === "add-workout") { document.getElementById("exercise-cards").innerHTML = ""; }
   if (name === "groups") loadGroupList();
   if (name === "ranking") loadRanking();
 }
@@ -375,20 +375,127 @@ function changeMonth(delta) {
   renderCalendar();
 }
 
-// ─── 記録追加 ────────────────────────────────────────────
+// ─── 記録追加（筋トレメモ風）────────────────────────────
 
-function addExerciseRow() {
-  const container = document.getElementById("exercises-container");
-  const row = document.createElement("div");
-  row.className = "exercise-row";
-  row.innerHTML = `
-    <input class="input" type="text" placeholder="種目名" required />
-    <input class="input num-input" type="number" placeholder="セット" min="1" />
-    <input class="input num-input" type="number" placeholder="回数" min="1" />
-    <input class="input num-input" type="number" placeholder="kg" min="0" step="0.5" />
-    <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
+const EXERCISES = {
+  '胸': ['ベンチプレス', 'インクラインベンチプレス', 'ダンベルフライ', 'ペックデック', 'ディップス', 'プッシュアップ'],
+  '背中': ['デッドリフト', 'ラットプルダウン', 'ベントオーバーロー', 'シーテッドロー', 'チンニング', 'ワンハンドロー'],
+  '脚': ['スクワット', 'レッグプレス', 'レッグカール', 'レッグエクステンション', 'ルーマニアンデッドリフト', 'カーフレイズ'],
+  '肩': ['ショルダープレス', 'サイドレイズ', 'フロントレイズ', 'フェイスプル', 'アップライトロー', 'リアデルトフライ'],
+  '腕': ['バーベルカール', 'ハンマーカール', 'プッシュダウン', 'スカルクラッシャー', 'ケーブルカール', 'ディップス'],
+  '腹': ['クランチ', 'プランク', 'レッグレイズ', 'ロシアンツイスト', 'アブローラー', 'サイドプランク'],
+};
+
+let activePart = '胸';
+
+function openExerciseSelector() {
+  const tabsEl = document.getElementById("part-tabs");
+  tabsEl.innerHTML = Object.keys(EXERCISES).map(p =>
+    `<button type="button" class="part-tab ${p === activePart ? 'active' : ''}" onclick="selectPart('${p}')">${p}</button>`
+  ).join("");
+  renderExerciseList();
+  document.getElementById("exercise-search").value = "";
+  document.getElementById("custom-exercise").value = "";
+  openModal("exercise-selector-modal");
+}
+
+function selectPart(part) {
+  activePart = part;
+  document.querySelectorAll(".part-tab").forEach(b => b.classList.toggle("active", b.textContent === part));
+  renderExerciseList();
+}
+
+function filterExercises() {
+  renderExerciseList(document.getElementById("exercise-search").value.trim());
+}
+
+function renderExerciseList(query = "") {
+  const list = document.getElementById("exercise-list");
+  let items = query
+    ? Object.values(EXERCISES).flat().filter(e => e.includes(query))
+    : EXERCISES[activePart] || [];
+  list.innerHTML = items.map(ex =>
+    `<div class="exercise-item" onclick="selectExercise('${ex}', '${query ? getPart(ex) : activePart}')">${ex}</div>`
+  ).join("") || '<p class="empty-msg" style="padding:8px 0">見つかりません</p>';
+}
+
+function getPart(name) {
+  for (const [part, list] of Object.entries(EXERCISES)) {
+    if (list.includes(name)) return part;
+  }
+  return "";
+}
+
+function addCustomExercise() {
+  const name = document.getElementById("custom-exercise").value.trim();
+  if (!name) return;
+  selectExercise(name, "");
+}
+
+async function selectExercise(name, part) {
+  closeAllModals();
+  const card = createExerciseCard(name, part);
+  document.getElementById("exercise-cards").appendChild(card);
+  // 前回の記録を取得してセットに反映
+  try {
+    const last = await api("GET", `/api/exercises/${encodeURIComponent(name)}/last`);
+    if (last && last.sets) {
+      card.querySelector(".set-rows").innerHTML = "";
+      last.sets.forEach(s => addSetRow(card, s));
+      addSetRow(card, null);
+    }
+  } catch (_) {}
+}
+
+function createExerciseCard(name, part) {
+  const card = document.createElement("div");
+  card.className = "exercise-card";
+  card.dataset.exercise = name;
+  card.dataset.part = part;
+  card.innerHTML = `
+    <div class="exercise-card-header">
+      <span class="exercise-card-name">${name}</span>
+      ${part ? `<span class="body-part-tag">${part}</span>` : ""}
+      <button type="button" class="exercise-card-remove" onclick="this.closest('.exercise-card').remove()">×</button>
+    </div>
+    <div class="set-table">
+      <div class="set-header">
+        <span>SET</span><span>前回</span><span>重量</span><span>回数</span><span></span>
+      </div>
+      <div class="set-rows"></div>
+    </div>
+    <button type="button" class="add-set-btn" onclick="addSetRow(this.closest('.exercise-card'), null)">＋ セットを追加</button>
   `;
-  container.appendChild(row);
+  addSetRow(card, null);
+  return card;
+}
+
+function addSetRow(card, prev) {
+  const rows = card.querySelector(".set-rows");
+  const num = rows.children.length + 1;
+  const prevText = prev ? `${prev.weight ?? "-"}kg×${prev.reps ?? "-"}` : "-";
+  const row = document.createElement("div");
+  row.className = "set-row";
+  row.innerHTML = `
+    <span class="set-num">${num}</span>
+    <span class="set-prev">${prevText}</span>
+    <div class="set-input-group">
+      <input class="set-input" type="number" placeholder="${prev?.weight ?? ''}" min="0" step="0.5" value="${prev?.weight ?? ''}" />
+      <span class="set-unit">kg</span>
+    </div>
+    <div class="set-input-group">
+      <input class="set-input set-input-reps" type="number" placeholder="${prev?.reps ?? ''}" min="1" value="" />
+      <span class="set-unit">回</span>
+    </div>
+    <button type="button" class="set-done-btn" onclick="toggleSetDone(this)">○</button>
+  `;
+  rows.appendChild(row);
+}
+
+function toggleSetDone(btn) {
+  btn.classList.toggle("checked");
+  btn.textContent = btn.classList.contains("checked") ? "✓" : "○";
+  btn.closest(".set-row").classList.toggle("done", btn.classList.contains("checked"));
 }
 
 async function submitWorkout(e) {
@@ -397,24 +504,29 @@ async function submitWorkout(e) {
   const memo = document.getElementById("workout-memo").value.trim();
 
   const exercises = [];
-  document.querySelectorAll(".exercise-row").forEach(row => {
-    const inputs = row.querySelectorAll("input");
-    const exercise = inputs[0].value.trim();
-    if (!exercise) return;
-    exercises.push({
-      exercise,
-      sets: inputs[1].value ? parseInt(inputs[1].value) : null,
-      reps: inputs[2].value ? parseInt(inputs[2].value) : null,
-      weight: inputs[3].value ? parseFloat(inputs[3].value) : null,
+  document.querySelectorAll(".exercise-card").forEach(card => {
+    const name = card.dataset.exercise;
+    card.querySelectorAll(".set-row").forEach(row => {
+      const weight = row.querySelector(".set-input").value;
+      const reps = row.querySelector(".set-input-reps").value;
+      if (weight || reps) {
+        exercises.push({
+          exercise: name,
+          sets: 1,
+          reps: reps ? parseInt(reps) : null,
+          weight: weight ? parseFloat(weight) : null,
+        });
+      }
     });
   });
+
+  if (exercises.length === 0) { alert("種目を追加してください"); return; }
 
   try {
     await api("POST", "/api/workouts", { date, memo, exercises });
     alert("記録しました！");
     document.getElementById("workout-memo").value = "";
-    document.getElementById("exercises-container").innerHTML = "";
-    addExerciseRow();
+    document.getElementById("exercise-cards").innerHTML = "";
     await loadStreak();
     showPage("home");
   } catch (err) {

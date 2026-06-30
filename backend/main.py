@@ -164,6 +164,25 @@ def add_workout(data: models.WorkoutIn, current_user=Depends(auth.get_current_us
         db.close()
 
 
+@app.get("/api/exercises/{exercise_name}/last")
+def last_exercise_record(exercise_name: str, current_user=Depends(auth.get_current_user)):
+    db = database.get_db()
+    try:
+        rows = db.execute(
+            """SELECT we.weight, we.reps, w.date
+               FROM workout_exercises we
+               JOIN workouts w ON we.workout_id = w.id
+               WHERE w.user_id = %s AND we.exercise = %s
+               ORDER BY w.date DESC, we.id ASC""",
+            (current_user["id"], exercise_name),
+        ).fetchall()
+        if not rows:
+            return None
+        return {"sets": [{"weight": r["weight"], "reps": r["reps"]} for r in rows], "date": rows[0]["date"]}
+    finally:
+        db.close()
+
+
 @app.get("/api/workouts/me")
 def my_workouts(current_user=Depends(auth.get_current_user)):
     db = database.get_db()
