@@ -446,66 +446,145 @@ async function selectExercise(name, part) {
   closeAllModals();
   const card = createExerciseCard(name, part);
   document.getElementById("exercise-cards").appendChild(card);
-  // 前回の記録を取得してセットに反映
   try {
     const last = await api("GET", `/api/exercises/${encodeURIComponent(name)}/last`);
-    if (last && last.sets) {
-      card.querySelector(".set-rows").innerHTML = "";
-      last.sets.forEach(s => addSetRow(card, s));
-      addSetRow(card, null);
+    if (last && last.sets && last.sets.length > 0) {
+      card.dataset.lastSets = JSON.stringify(last.sets);
+      card.dataset.lastDate = last.date || "";
+      renderLastRecord(card, last);
+      const setRows = card.querySelector(".set-rows");
+      setRows.innerHTML = "";
+      last.sets.forEach((s, i) => addSetRow(card, s, i + 1));
+      addSetRow(card, null, last.sets.length + 1);
+    } else {
+      addSetRow(card, null, 1);
     }
-  } catch (_) {}
+  } catch (_) {
+    addSetRow(card, null, 1);
+  }
 }
 
 function createExerciseCard(name, part) {
   const card = document.createElement("div");
   card.className = "exercise-card";
   card.dataset.exercise = name;
-  card.dataset.part = part;
+  card.dataset.part = part || "";
+  card.dataset.lastSets = "[]";
   card.innerHTML = `
     <div class="exercise-card-header">
       <span class="exercise-card-name">${name}</span>
       ${part ? `<span class="body-part-tag">${part}</span>` : ""}
       <button type="button" class="exercise-card-remove" onclick="this.closest('.exercise-card').remove()">×</button>
     </div>
-    <div class="set-table">
-      <div class="set-header">
-        <span>SET</span><span>前回</span><span>重量</span><span>回数</span><span></span>
-      </div>
-      <div class="set-rows"></div>
+    <div class="last-record" style="display:none"></div>
+    <div class="set-col-header">
+      <span>セット</span><span>重さ</span><span>回数</span><span>RM</span><span>補助</span>
     </div>
-    <button type="button" class="add-set-btn" onclick="addSetRow(this.closest('.exercise-card'), null)">＋ セットを追加</button>
+    <div class="set-rows"></div>
+    <button type="button" class="add-set-btn" onclick="addSetRowBtn(this)">＋ セットを追加</button>
   `;
-  addSetRow(card, null);
   return card;
 }
 
-function addSetRow(card, prev) {
-  const rows = card.querySelector(".set-rows");
-  const num = rows.children.length + 1;
-  const prevText = prev ? `${prev.weight ?? "-"}kg×${prev.reps ?? "-"}` : "-";
-  const row = document.createElement("div");
-  row.className = "set-row";
-  row.innerHTML = `
-    <span class="set-num">${num}</span>
-    <span class="set-prev">${prevText}</span>
-    <div class="set-input-group">
-      <input class="set-input" type="number" placeholder="${prev?.weight ?? ''}" min="0" step="0.5" value="${prev?.weight ?? ''}" />
-      <span class="set-unit">kg</span>
+function renderLastRecord(card, last) {
+  const el = card.querySelector(".last-record");
+  const rows = last.sets.map((s, i) =>
+    `<div class="last-record-row">
+      <span class="last-record-num">${i + 1}</span>
+      <span>${s.weight ?? "-"} kg × ${s.reps ?? "-"} reps</span>
+    </div>`
+  ).join("");
+  el.innerHTML = `
+    <div class="last-record-header">
+      <span class="last-record-title">Last Record: ${last.date || ""}</span>
+      <button type="button" class="copy-all-btn" title="前回の記録を一括コピー" onclick="copyLastRecord(this)">📋</button>
     </div>
-    <div class="set-input-group">
-      <input class="set-input set-input-reps" type="number" placeholder="${prev?.reps ?? ''}" min="1" value="" />
-      <span class="set-unit">回</span>
-    </div>
-    <button type="button" class="set-done-btn" onclick="toggleSetDone(this)">○</button>
+    ${rows}
   `;
-  rows.appendChild(row);
+  el.style.display = "";
+}
+
+function addSetRowBtn(btn) {
+  const card = btn.closest(".exercise-card");
+  const rows = card.querySelector(".set-rows");
+  addSetRow(card, null, rows.children.length + 1);
+}
+
+function addSetRow(card, prev, num) {
+  const rows = card.querySelector(".set-rows");
+  const block = document.createElement("div");
+  block.className = "set-block";
+  block.dataset.prevWeight = prev?.weight ?? "";
+  block.dataset.prevReps = prev?.reps ?? "";
+  block.innerHTML = `
+    <div class="set-main-row">
+      <span class="set-num">${num}</span>
+      <div class="set-input-wrap">
+        <button type="button" class="carry-btn" onclick="carryValue(this,'weight')">↩</button>
+        <input class="set-text-input" type="number" placeholder="重さ" min="0" step="0.5"
+               oninput="updateRMDisplay(this)" />
+        <span class="set-unit-label">kg</span>
+      </div>
+      <div class="set-input-wrap">
+        <button type="button" class="carry-btn" onclick="carryValue(this,'reps')">↩</button>
+        <input class="set-text-input" type="number" placeholder="回数" min="1"
+               oninput="updateRMDisplay(this)" />
+        <span class="set-unit-label">回</span>
+      </div>
+      <span class="set-rm-val">-</span>
+      <button type="button" class="set-check" onclick="toggleSetDone(this)">✓</button>
+    </div>
+    <div class="set-memo-row">
+      <button type="button" class="carry-btn" style="width:22px;height:22px;font-size:10px" onclick="carryValue(this,'memo')">↩</button>
+      <input class="set-memo-input" type="text" placeholder="メモ" />
+    </div>
+  `;
+  rows.appendChild(block);
+}
+
+function carryValue(btn, type) {
+  const block = btn.closest(".set-block");
+  if (type === "weight") {
+    const v = block.dataset.prevWeight;
+    if (!v) return;
+    const input = block.querySelectorAll(".set-main-row .set-text-input")[0];
+    input.value = v; updateRMDisplay(input);
+  } else if (type === "reps") {
+    const v = block.dataset.prevReps;
+    if (!v) return;
+    const input = block.querySelectorAll(".set-main-row .set-text-input")[1];
+    input.value = v; updateRMDisplay(input);
+  }
+}
+
+function copyLastRecord(btn) {
+  const card = btn.closest(".exercise-card");
+  const lastSets = JSON.parse(card.dataset.lastSets || "[]");
+  if (!lastSets.length) return;
+  const blocks = card.querySelectorAll(".set-block");
+  lastSets.forEach((s, i) => {
+    let block = blocks[i];
+    if (!block) { addSetRow(card, s, i + 1); block = card.querySelectorAll(".set-block")[i]; }
+    if (!block) return;
+    const inputs = block.querySelectorAll(".set-main-row .set-text-input");
+    if (inputs[0]) { inputs[0].value = s.weight ?? ""; updateRMDisplay(inputs[0]); }
+    if (inputs[1]) { inputs[1].value = s.reps ?? ""; }
+  });
+}
+
+function updateRMDisplay(input) {
+  const block = input.closest(".set-block");
+  if (!block) return;
+  const inputs = block.querySelectorAll(".set-main-row .set-text-input");
+  const w = parseFloat(inputs[0]?.value);
+  const r = parseInt(inputs[1]?.value);
+  const rmEl = block.querySelector(".set-rm-val");
+  if (rmEl) rmEl.textContent = (w && r) ? `${calc1RM(w, r)}kg` : "-";
 }
 
 function toggleSetDone(btn) {
-  btn.classList.toggle("checked");
-  btn.textContent = btn.classList.contains("checked") ? "✓" : "○";
-  btn.closest(".set-row").classList.toggle("done", btn.classList.contains("checked"));
+  btn.classList.toggle("done");
+  btn.closest(".set-block").style.background = btn.classList.contains("done") ? "#f0fff4" : "";
 }
 
 async function submitWorkout(e) {
@@ -516,9 +595,10 @@ async function submitWorkout(e) {
   const exercises = [];
   document.querySelectorAll(".exercise-card").forEach(card => {
     const name = card.dataset.exercise;
-    card.querySelectorAll(".set-row").forEach(row => {
-      const weight = row.querySelector(".set-input").value;
-      const reps = row.querySelector(".set-input-reps").value;
+    card.querySelectorAll(".set-block").forEach(block => {
+      const inputs = block.querySelectorAll(".set-main-row .set-text-input");
+      const weight = inputs[0]?.value;
+      const reps = inputs[1]?.value;
       if (weight || reps) {
         exercises.push({
           exercise: name,

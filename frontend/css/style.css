@@ -204,58 +204,95 @@ body {
 }
 .add-exercise-btn:hover { border-color: var(--primary); color: var(--primary); }
 
+/* 種目カード */
 .exercise-card {
   background: var(--card-bg); border-radius: 12px;
-  margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.06); overflow: hidden;
+  margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.08); overflow: hidden;
 }
 .exercise-card-header {
   display: flex; align-items: center; gap: 8px;
-  padding: 12px 14px; border-bottom: 1px solid var(--border);
+  padding: 12px 14px; background: var(--card-bg);
 }
-.exercise-card-name { font-weight: 800; font-size: 15px; flex: 1; }
+.exercise-card-name { font-weight: 800; font-size: 16px; flex: 1; }
 .body-part-tag {
-  font-size: 11px; font-weight: 700; padding: 2px 8px;
+  font-size: 11px; font-weight: 700; padding: 3px 10px;
   border-radius: 20px; background: #fff0f0; color: var(--primary);
 }
 .exercise-card-remove {
   border: none; background: transparent; cursor: pointer;
-  color: var(--text-light); font-size: 18px; padding: 2px 4px;
+  color: #ccc; font-size: 20px; padding: 2px 4px; line-height: 1;
 }
 
-.set-table { width: 100%; }
-.set-header {
-  display: grid; grid-template-columns: 32px 1fr 80px 70px 36px;
-  gap: 6px; padding: 6px 14px;
-  font-size: 11px; font-weight: 700; color: var(--text-light);
-  border-bottom: 1px solid var(--border);
+/* Last Record */
+.last-record {
+  background: #f2f2f2; padding: 10px 14px;
+  border-top: 1px solid var(--border);
 }
-.set-row {
-  display: grid; grid-template-columns: 32px 1fr 80px 70px 36px;
-  gap: 6px; padding: 8px 14px; align-items: center;
-  border-bottom: 1px solid #f5f5f5; transition: background .1s;
+.last-record-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
 }
-.set-row.done { background: #f9fff9; }
-.set-num { font-size: 13px; font-weight: 700; color: var(--text-light); text-align: center; }
-.set-prev { font-size: 11px; color: #bbb; }
-.set-input-group { display: flex; align-items: center; gap: 3px; }
-.set-input {
-  width: 52px; padding: 6px 6px; border: 1.5px solid var(--border);
-  border-radius: 6px; font-size: 14px; text-align: center; outline: none;
+.last-record-title { font-size: 12px; font-weight: 700; color: #555; }
+.copy-all-btn {
+  border: none; background: transparent; cursor: pointer;
+  font-size: 18px; padding: 2px; color: #888;
 }
-.set-input:focus { border-color: var(--primary); }
-.set-unit { font-size: 11px; color: var(--text-light); }
-.set-input-reps { width: 40px; }
-.set-done-btn {
-  width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--border);
-  background: transparent; cursor: pointer; font-size: 14px;
+.last-record-row {
+  display: flex; gap: 8px; font-size: 12px; color: #777;
+  padding: 2px 0;
+}
+.last-record-num { width: 18px; text-align: right; color: #999; }
+
+/* カラムヘッダー */
+.set-col-header {
+  display: grid; grid-template-columns: 28px 1fr 1fr 52px 36px;
+  gap: 4px; padding: 6px 14px 4px;
+  font-size: 10px; font-weight: 700; color: #aaa;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+/* セット行 */
+.set-block { border-top: 1px solid #f0f0f0; }
+.set-main-row {
+  display: grid; grid-template-columns: 28px 1fr 1fr 52px 36px;
+  gap: 4px; padding: 10px 14px 4px; align-items: center;
+}
+.set-num { font-size: 15px; font-weight: 800; color: #bbb; text-align: center; }
+.set-input-wrap { display: flex; align-items: center; gap: 4px; }
+.carry-btn {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--primary); border: none; cursor: pointer;
+  color: #fff; font-size: 13px; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+}
+.set-text-input {
+  flex: 1; min-width: 0; padding: 6px 4px;
+  border: none; border-bottom: 1.5px solid var(--border);
+  font-size: 16px; text-align: center; outline: none; background: transparent;
+}
+.set-text-input:focus { border-bottom-color: var(--primary); }
+.set-unit-label { font-size: 12px; color: #aaa; flex-shrink: 0; }
+.set-rm-val { font-size: 12px; font-weight: 700; color: #888; text-align: center; }
+.set-check {
+  width: 32px; height: 32px; border-radius: 6px;
+  border: 2px solid #ddd; background: transparent;
+  cursor: pointer; font-size: 16px; color: #ccc;
   display: flex; align-items: center; justify-content: center; transition: .15s;
 }
-.set-done-btn.checked { background: #2ecc71; border-color: #2ecc71; color: #fff; }
+.set-check.done { background: #2ecc71; border-color: #2ecc71; color: #fff; }
+
+.set-memo-row { padding: 4px 14px 10px; display: flex; align-items: center; gap: 6px; }
+.set-memo-input {
+  flex: 1; border: none; border-bottom: 1px solid #eee;
+  font-size: 13px; color: #888; background: transparent; outline: none; padding: 4px 0;
+}
+.set-memo-input::placeholder { color: #ccc; }
 
 .add-set-btn {
-  width: 100%; padding: 10px; border: none; background: #fafafa;
-  color: var(--primary); font-size: 13px; font-weight: 700; cursor: pointer;
-  transition: background .15s;
+  width: 100%; padding: 12px; border: none; background: #fafafa;
+  color: var(--primary); font-size: 14px; font-weight: 700; cursor: pointer;
+  border-top: 1px solid var(--border); transition: background .15s;
 }
 .add-set-btn:hover { background: #fff0f0; }
 
