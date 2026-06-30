@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GymShare</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ── 認証画面 ── -->
+<div id="auth-screen" class="screen">
+  <div class="auth-card">
+    <h1 class="logo">💪 GymShare</h1>
+    <p class="tagline">友達と筋トレを共有しよう</p>
+
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">ログイン</button>
+      <button class="tab-btn" id="tab-register" onclick="switchTab('register')">新規登録</button>
+    </div>
+
+    <form id="login-form" onsubmit="doLogin(event)">
+      <input class="input" type="text" id="login-username" placeholder="ユーザー名" required />
+      <input class="input" type="password" id="login-password" placeholder="パスワード" required />
+      <button class="btn-primary" type="submit">ログイン</button>
+    </form>
+
+    <form id="register-form" style="display:none" onsubmit="doRegister(event)">
+      <input class="input" type="text" id="reg-username" placeholder="ユーザー名" required />
+      <input class="input" type="password" id="reg-password" placeholder="パスワード" required />
+      <button class="btn-primary" type="submit">登録する</button>
+    </form>
+
+    <p id="auth-error" class="error-msg"></p>
+  </div>
+</div>
+
+<!-- ── メイン画面 ── -->
+<div id="main-screen" class="screen" style="display:none">
+
+  <!-- ナビゲーション -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="showPage('home')" id="nav-home">
+      <span class="nav-icon">🏠</span><span>ホーム</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('calendar')" id="nav-calendar">
+      <span class="nav-icon">📅</span><span>カレンダー</span>
+    </button>
+    <button class="nav-btn nav-center" onclick="showPage('add-workout')">
+      <span class="nav-icon">＋</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('groups')" id="nav-groups">
+      <span class="nav-icon">👥</span><span>グループ</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('ranking')" id="nav-ranking">
+      <span class="nav-icon">🏆</span><span>ランキング</span>
+    </button>
+  </nav>
+
+  <div class="page-area">
+
+    <!-- ホーム -->
+    <div id="page-home" class="page active">
+      <header class="page-header">
+        <div>
+          <h2 id="home-username">GymShare</h2>
+          <span id="streak-badge" class="streak-badge"></span>
+        </div>
+        <div class="header-right">
+          <select id="group-select-home" class="group-select" onchange="loadTimeline()">
+            <option value="">グループを選択</option>
+          </select>
+          <button class="btn-icon" onclick="logout()">ログアウト</button>
+        </div>
+      </header>
+      <div id="timeline" class="timeline"></div>
+    </div>
+
+    <!-- カレンダー -->
+    <div id="page-calendar" class="page">
+      <header class="page-header">
+        <h2>カレンダー</h2>
+        <select id="group-select-calendar" class="group-select" onchange="loadCalendar()">
+          <option value="">グループを選択</option>
+        </select>
+      </header>
+      <div class="calendar-nav">
+        <button class="btn-icon" onclick="changeMonth(-1)">＜</button>
+        <span id="cal-month-label"></span>
+        <button class="btn-icon" onclick="changeMonth(1)">＞</button>
+      </div>
+      <div id="calendar-grid" class="calendar-grid"></div>
+      <div id="calendar-events" class="event-list"></div>
+    </div>
+
+    <!-- 記録追加 -->
+    <div id="page-add-workout" class="page">
+      <header class="page-header"><h2>筋トレ記録</h2></header>
+      <form id="workout-form" onsubmit="submitWorkout(event)">
+        <label class="label">日付</label>
+        <input class="input" type="date" id="workout-date" required />
+
+        <label class="label">メモ（任意）</label>
+        <input class="input" type="text" id="workout-memo" placeholder="今日のひとこと" />
+
+        <label class="label">種目</label>
+        <div id="exercises-container"></div>
+        <button type="button" class="btn-secondary" onclick="addExerciseRow()">＋ 種目を追加</button>
+
+        <button class="btn-primary" type="submit" style="margin-top:16px">記録する</button>
+      </form>
+    </div>
+
+    <!-- グループ -->
+    <div id="page-groups" class="page">
+      <header class="page-header"><h2>グループ</h2></header>
+
+      <div class="group-actions">
+        <button class="btn-primary" onclick="openModal('create-group-modal')">グループを作成</button>
+        <button class="btn-secondary" onclick="openModal('join-group-modal')">招待コードで参加</button>
+      </div>
+
+      <div id="group-list" class="group-list"></div>
+
+      <!-- グループ詳細 -->
+      <div id="group-detail" style="display:none">
+        <button class="btn-back" onclick="closeGroupDetail()">← 一覧へ</button>
+        <h3 id="group-detail-name"></h3>
+        <p id="group-detail-invite">招待コード: <strong id="group-invite-code"></strong></p>
+        <h4>メンバー</h4>
+        <div id="group-members-list"></div>
+        <h4 style="margin-top:16px">合トレイベント</h4>
+        <button class="btn-secondary" onclick="openModal('create-event-modal')">イベントを作成</button>
+        <div id="group-events-list" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <!-- ランキング -->
+    <div id="page-ranking" class="page">
+      <header class="page-header"><h2>ランキング</h2></header>
+      <select id="group-select-ranking" class="group-select" onchange="loadRanking()" style="width:100%;margin-bottom:16px">
+        <option value="">グループを選択</option>
+      </select>
+      <div id="ranking-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── モーダル ── -->
+<div id="modal-backdrop" class="modal-backdrop" onclick="closeAllModals()" style="display:none"></div>
+
+<div id="create-group-modal" class="modal" style="display:none">
+  <h3>グループ作成</h3>
+  <form onsubmit="createGroup(event)">
+    <input class="input" type="text" id="new-group-name" placeholder="グループ名" required />
+    <input class="input" type="text" id="new-group-desc" placeholder="説明（任意）" />
+    <button class="btn-primary" type="submit">作成</button>
+  </form>
+</div>
+
+<div id="join-group-modal" class="modal" style="display:none">
+  <h3>グループに参加</h3>
+  <form onsubmit="joinGroup(event)">
+    <input class="input" type="text" id="join-invite-code" placeholder="招待コード" required />
+    <button class="btn-primary" type="submit">参加する</button>
+  </form>
+</div>
+
+<div id="create-event-modal" class="modal" style="display:none">
+  <h3>合トレイベント作成</h3>
+  <form onsubmit="createEvent(event)">
+    <input class="input" type="text" id="event-title" placeholder="タイトル（例：一緒に胸トレ）" required />
+    <input class="input" type="date" id="event-date" required />
+    <input class="input" type="text" id="event-location" placeholder="場所（例：〇〇ジム）" />
+    <input class="input" type="text" id="event-desc" placeholder="説明（任意）" />
+    <button class="btn-primary" type="submit">作成</button>
+  </form>
+</div>
+
+<div id="comment-modal" class="modal" style="display:none">
+  <h3>コメント</h3>
+  <div id="comment-list" class="comment-list"></div>
+  <form onsubmit="submitComment(event)" style="margin-top:8px">
+    <input class="input" type="text" id="comment-input" placeholder="コメントを入力" required />
+    <button class="btn-primary" type="submit">送信</button>
+  </form>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>

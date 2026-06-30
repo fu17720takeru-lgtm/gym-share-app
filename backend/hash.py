@@ -1,21 +1,15 @@
 from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 
-# PasswordHasherのインスタンスを作成（デフォルト設定を使用）
-#ph = PasswordHasher()
-# ハッシュ化したいパスワード
-#password = "mysecretpassword"
-# パスワードをハッシュ化
-# hash()メソッドは内部で自動的に安全なソルトを生成します
-#hashed_password = ph.hash(password)
-#print(f"元のパスワード: {password}")
-#print(f"ハッシュ化されたパスワード: {hashed_password}")
-# 生成されたハッシュ値の例 (実行ごとにソルトが異なるため、結果は変わります):
-# $argon2id$v=19$m=65536,t=3,p=4$MIIRqgvgQbgj220jfp0MPA$YfwJSVjtjSU0zzV/P3S9nnQ/USre2wvJMjfCIjrTQbg
+_ph = PasswordHasher()
 
-def hash(password):
-    ph = PasswordHasher()
-    hashed_password = ph.hash(password)
-    return hashed_password
 
-if __name__ == "__main__":
-    pass
+def hash_password(password: str) -> str:
+    return _ph.hash(password)
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    try:
+        return _ph.verify(hashed, password)
+    except VerifyMismatchError:
+        return False
