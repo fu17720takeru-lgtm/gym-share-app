@@ -169,12 +169,13 @@ def get_pr(exercise_name: str, current_user=Depends(auth.get_current_user)):
     db = database.get_db()
     try:
         row = db.execute(
-            """SELECT MAX(weight) as max_weight FROM workout_exercises we
+            """SELECT MAX(weight * (1 + COALESCE(reps, 1) / 30.0)) as max_rm
+               FROM workout_exercises we
                JOIN workouts w ON we.workout_id = w.id
-               WHERE w.user_id = %s AND we.exercise = %s""",
+               WHERE w.user_id = %s AND we.exercise = %s AND weight IS NOT NULL""",
             (current_user["id"], exercise_name),
         ).fetchone()
-        return {"pr": row["max_weight"] if row else None}
+        return {"pr_rm": round(row["max_rm"], 1) if row and row["max_rm"] else None}
     finally:
         db.close()
 

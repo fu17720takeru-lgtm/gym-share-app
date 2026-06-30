@@ -171,9 +171,19 @@ async function loadTimeline() {
 }
 
 function renderWorkoutCard(w) {
-  const chips = w.exercises.map(ex =>
-    `<span class="exercise-chip">${ex.exercise}${ex.weight ? ` ${ex.weight}kg` : ""}</span>`
-  ).join("");
+  // 同じ種目のセットをまとめて最高RMを表示
+  const exMap = {};
+  w.exercises.forEach(ex => {
+    const rm = calc1RM(ex.weight, ex.reps);
+    if (!exMap[ex.exercise] || (rm && rm > exMap[ex.exercise].rm)) {
+      exMap[ex.exercise] = { weight: ex.weight, reps: ex.reps, rm };
+    }
+  });
+  const chips = Object.entries(exMap).map(([name, data]) => {
+    const detail = data.weight ? ` ${data.weight}kg` : "";
+    const rmText = data.rm ? ` <span style="color:#aaa;font-size:10px">1RM:${data.rm}kg</span>` : "";
+    return `<span class="exercise-chip">${name}${detail}${rmText}</span>`;
+  }).join("");
   return `
     <div class="workout-card">
       <div class="workout-card-header">
@@ -522,28 +532,28 @@ async function submitWorkout(e) {
 
   if (exercises.length === 0) { alert("種目を追加してください"); return; }
 
-  // PR チェック用に各種目の現在PRを取得
+  // PR チェック用に各種目の現在1RMを取得
   const exerciseNames = [...new Set(exercises.map(e => e.exercise))];
   const prMap = {};
   await Promise.all(exerciseNames.map(async name => {
     try {
       const res = await api("GET", `/api/exercises/${encodeURIComponent(name)}/pr`);
-      prMap[name] = res?.pr ?? null;
+      prMap[name] = res?.pr_rm ?? null;
     } catch (_) {}
   }));
 
   try {
     await api("POST", "/api/workouts", { date, memo, exercises });
 
-    // 新PR検出
+    // 新PR検出（1RMで比較）
     const newPRs = [];
     for (const ex of exercises) {
-      const w = ex.weight;
-      if (w && (prMap[ex.exercise] === null || w > prMap[ex.exercise])) {
-        if (!newPRs.find(p => p.exercise === ex.exercise && p.weight === w)) {
-          newPRs.push({ exercise: ex.exercise, weight: w });
+      const rm = calc1RM(ex.weight, ex.reps);
+      if (rm && (prMap[ex.exercise] === null || rm > prMap[ex.exercise])) {
+        if (!newPRs.find(p => p.exercise === ex.exercise)) {
+          newPRs.push({ exercise: ex.exercise, rm });
         }
-        prMap[ex.exercise] = w;
+        prMap[ex.exercise] = rm;
       }
     }
 
@@ -552,7 +562,7 @@ async function submitWorkout(e) {
     await loadStreak();
 
     if (newPRs.length > 0) {
-      showPR(newPRs[0].exercise, newPRs[0].weight);
+      showPR(newPRs[0].exercise, newPRs[0].rm);
     } else {
       showPage("home");
     }
@@ -711,12 +721,17 @@ function openModal(id) {
   document.getElementById(id).style.display = "";
 }
 
-function showPR(exercise, weight) {
+function calc1RM(weight, reps) {
+  if (!weight) return null;
+  if (!reps || reps <= 0) return weight;
+  return Math.round(weight * (1 + reps / 30));
+}
+
+function showPR(exercise, rm) {
   document.getElementById("pr-exercise").textContent = exercise;
-  document.getElementById("pr-weight").textContent = `${weight} kg`;
+  document.getElementById("pr-weight").textContent = `推定1RM: ${rm} kg`;
   const overlay = document.getElementById("pr-overlay");
   overlay.style.display = "flex";
-  // 3秒後に自動で閉じてホームへ
   setTimeout(() => {
     overlay.style.display = "none";
     showPage("home");
