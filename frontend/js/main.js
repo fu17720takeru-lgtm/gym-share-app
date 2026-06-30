@@ -112,7 +112,7 @@ function showPage(name) {
   if (navBtn) navBtn.classList.add("active");
 
   if (name === "home") loadTimeline();
-  if (name === "calendar") { calYear = new Date().getFullYear(); calMonth = new Date().getMonth(); renderCalendar(); }
+  if (name === "calendar") { calYear = new Date().getFullYear(); calMonth = new Date().getMonth(); loadCalendar(); }
   if (name === "add-workout") { document.getElementById("exercise-cards").innerHTML = ""; }
   if (name === "groups") loadGroupList();
   if (name === "ranking") loadRanking();
@@ -384,13 +384,19 @@ function showDayDetail(dateStr) {
 function renderEventCard(ev) {
   const goingSelected = ev.my_status === "going" ? "selected" : "";
   const notSelected = ev.my_status === "not_going" ? "selected" : "";
+  const goingCount = ev.going_count ?? 0;
+  const notGoingCount = ev.not_going_count ?? 0;
   return `
     <div class="event-card">
       <div class="event-title">${ev.title}</div>
-      <div class="event-meta">${ev.date}${ev.location ? " · " + ev.location : ""} · 参加${ev.going_count}人</div>
+      <div class="event-meta">${ev.date}${ev.location ? " · " + ev.location : ""}</div>
       <div class="event-respond">
-        <button class="${goingSelected}" onclick="respondEvent(${ev.id}, 'going', this)">参加する</button>
-        <button class="${notSelected}" onclick="respondEvent(${ev.id}, 'not_going', this)">不参加</button>
+        <button class="event-react-btn ${goingSelected}" onclick="respondEvent(${ev.id}, 'going', this)">
+          👍 <span class="react-count">${goingCount}</span>
+        </button>
+        <button class="event-react-btn ${notSelected}" onclick="respondEvent(${ev.id}, 'not_going', this)">
+          👎 <span class="react-count">${notGoingCount}</span>
+        </button>
       </div>
     </div>
   `;
@@ -399,7 +405,7 @@ function renderEventCard(ev) {
 async function respondEvent(eventId, status, btn) {
   try {
     await api("POST", `/api/events/${eventId}/respond`, { status });
-    btn.parentElement.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+    btn.parentElement.querySelectorAll(".event-react-btn").forEach(b => b.classList.remove("selected"));
     btn.classList.add("selected");
   } catch (_) {}
 }

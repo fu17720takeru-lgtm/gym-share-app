@@ -308,6 +308,7 @@ def get_events(group_id: int, current_user=Depends(auth.get_current_user)):
         rows = db.execute(
             """SELECT e.*, u.username as creator_name,
                       (SELECT COUNT(*) FROM event_participants ep WHERE ep.event_id = e.id AND ep.status='going') as going_count,
+                      (SELECT COUNT(*) FROM event_participants ep WHERE ep.event_id = e.id AND ep.status='not_going') as not_going_count,
                       (SELECT ep2.status FROM event_participants ep2 WHERE ep2.event_id = e.id AND ep2.user_id = %s) as my_status
                FROM events e JOIN users u ON e.created_by = u.id
                WHERE e.group_id = %s ORDER BY e.date""",
